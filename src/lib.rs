@@ -289,6 +289,36 @@ fn filter_candidates(
     }
 }
 
+/// Detects the programming language from the given text content
+///
+/// If the language cannot be determined, None will be returned.
+///
+/// # Examples
+/// ```
+/// use hyperpolyglot::{detect_from_text, Detection};
+///
+/// let content = r#"
+///     fn main() {
+///         println!("Hello World!");
+///     }
+/// "#;
+/// let language = detect_from_text(content).unwrap();
+/// assert_eq!(Detection::Classifier("Rust"), language);
+/// ```
+pub fn detect_from_text(content: &str) -> Option<Detection> {
+    // Since we don't have filename/extension info, we'll use all supported languages as candidates
+    let candidates: Vec<&'static str> = LANGUAGE_INFO.keys().copied().collect();
+
+    // Truncate content if needed
+    let content = truncate_to_char_boundary(content, MAX_CONTENT_SIZE_BYTES);
+
+    // Use classifier to determine the language
+    Some(Detection::Classifier(detectors::classify(
+        content,
+        &candidates,
+    )))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
